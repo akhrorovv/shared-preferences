@@ -51,12 +51,16 @@ class _HomePageState extends State<HomePage> {
         child: Column(
           children: [
             Expanded(
-              child: ListView.builder(
-                itemCount: cards.length,
-                itemBuilder: (ctx, i) {
-                  return _itemOfCardList(cards[i]);
-                },
-              ),
+              child: cards.isEmpty
+                  ? const Center(
+                      child: Text('No cards'),
+                    )
+                  : ListView.builder(
+                      itemCount: cards.length,
+                      itemBuilder: (ctx, i) {
+                        return _itemOfCardList(cards[i]);
+                      },
+                    ),
             ),
             Container(
               width: double.infinity,
