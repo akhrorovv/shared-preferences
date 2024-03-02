@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mask_text_input_formatter/mask_text_input_formatter.dart';
 import 'package:shared_pref/models/credit_card_model.dart';
+import 'package:shared_pref/services/pref_service.dart';
 
 class DetailsPage extends StatefulWidget {
   const DetailsPage({super.key});
@@ -27,37 +28,40 @@ class _DetailsPageState extends State<DetailsPage> {
     type: MaskAutoCompletionType.lazy,
   );
 
-  saveCard() {
-    setState(() {
-      String cardNumber = cardNumberController.text;
-      String expiredDate = expiredDateController.text;
+  saveCard() async {
+    String cardNumber = cardNumberController.text;
+    String expiredDate = expiredDateController.text;
 
-      CreditCard creditCard =
-          CreditCard(cardNumber: cardNumber, expiredDate: expiredDate);
+    var creditCard = CreditCard(cardNumber: cardNumber, expiredDate: expiredDate);
 
-      if (cardNumber.trim().isEmpty || cardNumber.length < 16) {
-        return;
-      }
+    if (cardNumber.trim().isEmpty || cardNumber.length < 16) {
+      return;
+    }
 
-      if (expiredDate.trim().isEmpty || expiredDate.length < 5) {
-        return;
-      }
+    if (expiredDate.trim().isEmpty || expiredDate.length < 5) {
+      return;
+    }
 
-      if (cardNumber.startsWith('4')) {
-        creditCard.cardImage = 'assets/images/ic_card_visa.png';
-        creditCard.cardType = 'visa';
-      } else if (cardNumber.startsWith('5')) {
-        creditCard.cardImage = 'assets/images/ic_card_master.png';
-        creditCard.cardType = 'master';
-      } else {
-        return;
-      }
-      backToFinish(creditCard);
-    });
+    if (cardNumber.startsWith('4')) {
+      creditCard.cardImage = 'assets/images/ic_card_visa.png';
+      creditCard.cardType = 'visa';
+    } else if (cardNumber.startsWith('5')) {
+      creditCard.cardImage = 'assets/images/ic_card_master.png';
+      creditCard.cardType = 'master';
+    } else {
+      return;
+    }
+
+    var listLocal = await Prefs.loadCardList();
+    listLocal.add(creditCard);
+
+    Prefs.storeCardList(listLocal);
+
+    backToFinish();
   }
 
-  backToFinish(CreditCard creditCard) {
-    Navigator.of(context).pop(creditCard);
+  backToFinish() {
+    Navigator.of(context).pop(true);
   }
 
   String getCardType() {

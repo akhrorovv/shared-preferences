@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_pref/services/pref_service.dart';
 
 import '../models/credit_card_model.dart';
 import 'details_page.dart';
@@ -11,23 +12,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<CreditCard> cards = [
-    CreditCard(
-      cardNumber: '0000 0000 0000 0000',
-      expiredDate: '12/12',
-      cardType: 'master',
-      cardImage: 'assets/images/ic_card_master.png',
-    ),
-    CreditCard(
-      cardNumber: '8888 8888 8888 8888',
-      expiredDate: '25/25',
-      cardType: 'visa',
-      cardImage: 'assets/images/ic_card_visa.png',
-    ),
-  ];
+  List<CreditCard> cards = [];
 
   Future openDetailsPage() async {
-    CreditCard result = await Navigator.of(context).push(
+    var result = await Navigator.of(context).push(
       MaterialPageRoute(
         builder: (BuildContext context) {
           return const DetailsPage();
@@ -35,11 +23,23 @@ class _HomePageState extends State<HomePage> {
       ),
     );
 
-    setState(() {
-      cards.add(result);
-    });
+    loadCards();
+  }
 
-    // loadCards();
+  loadCards() async {
+    var myList = await Prefs.loadCardList();
+    setState(() {
+      cards = myList;
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    setState(() {
+      loadCards();
+    });
   }
 
   @override
@@ -81,9 +81,52 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
+  deleteCard(CreditCard creditCard) async {
+    cards.remove(creditCard);
+    Prefs.removeCard();
+    Prefs.storeCardList(cards);
+  }
+
+  openDialog(CreditCard card) {
+    showDialog(
+      context: context,
+      builder: (BuildContext buildContext) {
+        return AlertDialog(
+          title: const Text("Delete card"),
+          content: const Text("Are you sure you want to delete card?"),
+          actions: [
+            MaterialButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                "Cancel",
+                style: TextStyle(color: Colors.blue),
+              ),
+            ),
+            MaterialButton(
+              onPressed: () {
+                setState(() {
+                  deleteCard(card);
+                });
+                Navigator.of(context).pop();
+              },
+              child: const Text(
+                "Delete",
+                style: TextStyle(color: Colors.red),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   Widget _itemOfCardList(CreditCard card) {
     return GestureDetector(
-      onLongPress: () {},
+      onLongPress: () {
+        openDialog(card);
+      },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
         padding: const EdgeInsets.all(5),
